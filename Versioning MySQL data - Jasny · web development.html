@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://gmpg.org/xfn/11">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>  Versioning MySQL data - Jasny · web development</title>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="description" content="Helping you out with PHP, MySQL &amp; Javascript" />
+	<meta name="generator" content="WordPress 3.9.5" />
+	
+	<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/style.css" type="text/css" media="screen" />
+	<!--[if IE 7]>
+		<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/css/ie7.css" type="text/css" media="screen" />
+	<![endif]-->
+	<!--[if IE 6]>
+		<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/css/ie6.css" type="text/css" media="screen" />
+	<![endif]-->
+	<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/css/print.css" type="text/css" media="print" />
+	<link rel="alternate" type="application/rss+xml" href="http://www.jasny.net/feed/" title="Jasny · web development RSS Feed" />
+	<link rel="alternate" type="application/rss+xml" href="http://www.jasny.net/comments/feed/" title="Jasny · web development Comments RSS Feed" />
+	<link rel="pingback" href="http://www.jasny.net/xmlrpc.php" />
+
+<!-- BEGIN Metadata added by Add-Meta-Tags WordPress plugin -->
+<meta name="description" content="Advantages of a VCS above a nightly backup are that you can walk to the individual changes for a document, see who made each change and revert back to specific revision if needed. These are features which would also be nice for data stored in a database. This article shows how to use triggers to can implement versioning for data stored in a MySQL db." />
+<meta name="keywords" content="mysql, php, web frontend" />
+<meta name="wot-verification" content="9bb91ec8a30fda0ac9bd" />
+<link rel="copyright" type="text/html" title="Jasny · web development Copyright Information" href="http://www.jasny.net/copy-freely/" />
+<!-- END Metadata added by Add-Meta-Tags WordPress plugin -->
+
+
+            <script type="text/javascript">//<![CDATA[
+            // Google Analytics for WordPress by Yoast v4.3.5 | http://yoast.com/wordpress/google-analytics/
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-25274509-1']);
+				            _gaq.push(['_trackPageview']);
+            (function () {
+                var ga = document.createElement('script');
+                ga.type = 'text/javascript';
+                ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+
+                var s = document.getElementsByTagName('script')[0];
+                s.parentNode.insertBefore(ga, s);
+            })();
+            //]]></script>
+			<link rel="alternate" type="application/rss+xml" title="Jasny · web development &raquo; Versioning MySQL data Comments Feed" href="http://www.jasny.net/articles/versioning-mysql-data/feed/" />
+<link rel='stylesheet' id='bwp-syntax-css'  href='http://www.jasny.net/wp-content/plugins/better-wordpress-syntax-based-on-geshi/css/bwp-syntax.css?ver=3.9.5' type='text/css' media='all' />
+<link rel='stylesheet' id='A2A_SHARE_SAVE-css'  href='http://www.jasny.net/wp-content/plugins/add-to-any/addtoany.min.css?ver=1.7' type='text/css' media='all' />
+<link rel='stylesheet' id='wp-author-bio-css'  href='http://www.jasny.net/wp-content/plugins/wp-about-author/wp-about-author.css?ver=3.9.5' type='text/css' media='all' />
+<script type='text/javascript' src='http://www.jasny.net/wp-includes/js/jquery/jquery.js?ver=1.11.0'></script>
+<script type='text/javascript' src='http://www.jasny.net/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.2.1'></script>
+<script type='text/javascript' src='http://www.jasny.net/wp-content/plugins/better-wordpress-syntax-based-on-geshi/js/bwp-syntax.js?ver=3.9.5'></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://www.jasny.net/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://www.jasny.net/wp-includes/wlwmanifest.xml" /> 
+<link rel='prev' title='EAV multi-value fields' href='http://www.jasny.net/articles/eav-multi-value-fields/' />
+<link rel='next' title='Versioning MySQL data: Multi-table records' href='http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/' />
+<meta name="generator" content="WordPress 3.9.5" />
+<link rel='canonical' href='http://www.jasny.net/articles/versioning-mysql-data/' />
+<link rel='shortlink' href='http://www.jasny.net/?p=291' />
+
+<script type="text/javascript"><!--
+var a2a_config=a2a_config||{},wpa2a={done:false,html_done:false,script_ready:false,script_load:function(){var a=document.createElement('script'),s=document.getElementsByTagName('script')[0];a.type='text/javascript';a.async=true;a.src='http://static.addtoany.com/menu/page.js';s.parentNode.insertBefore(a,s);wpa2a.script_load=function(){};},script_onready:function(){if(a2a.type=='page'){wpa2a.script_ready=true;if(wpa2a.html_done)wpa2a.init();}},init:function(){for(var i=0,el,target,targets=wpa2a.targets,length=targets.length;i<length;i++){el=document.getElementById('wpa2a_'+(i+1));target=targets[i];a2a_config.linkname=target.title;a2a_config.linkurl=target.url;if(el){a2a.init('page',{target:el});el.id='';}wpa2a.done=true;}wpa2a.targets=[];}};a2a_config.tracking_callback=['ready',wpa2a.script_onready];
+//--></script>
+<link rel="stylesheet" type="text/css" href="http://www.jasny.net/wp-content/plugins/wp-recaptcha/recaptcha.css" /><!-- All in one Favicon 4.3 --><link rel="icon" href="http://www.jasny.net/wp-content/uploads/logo-only-rotated-100x100.png" type="image/png"/>
+</head>
+<body>
+<div id="wrapper">
+	<div class="menu-main-container"><ul id="menu-main" class="menu"><li id="menu-item-794" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-794"><a href="http://www.jasny.net/">Home</a></li>
+<li id="menu-item-795" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-795"><a href="http://www.jasny.net/portfolio/">Portfolio</a></li>
+<li id="menu-item-796" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-796"><a href="http://jasny.github.com">Open source projects</a></li>
+<li id="menu-item-797" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-797"><a href="/articles">Articles</a></li>
+</ul></div>	<div id="header">
+		<h1><a href="http://www.jasny.net/">Jasny <small>· web development</small></a></h1>
+		<p class="description">Helping you out with PHP, MySQL &amp; Javascript</p>
+	</div><!-- close:header -->	<div id="content">
+		<div id="main-content">
+					<div class="post" id="post-291">
+				<h2>Versioning MySQL data</h2>				<span class="date">by Arnold Daniels on 11/12/2009</span>
+				<div class="entry">
+					<p>As a developer you&#8217;re probably using a versioning control system, like subversion or git, to safeguard your data. Advantages of using a VCS are that you can walk to the individual changes for a document, see who made each change and revert back to specific revision if needed. These are features which would also be nice for data stored in a database. With the use of <a href="http://dev.mysql.com/doc/refman/5.0/en/triggers.html" target="_blank">triggers</a> we can implement versioning for data stored in a MySQL db.<br />
+<span id="more-291"></span></p>
+<p><strong>The revisioning table</strong><br />
+We will not store the different versions of the records in the original table. We want this solution to be in the database layer instead of putting all the logic in the application layer. Instead we&#8217;ll create a new table, which stores all the different versions and lives next to the original table, which only contains the current version of each record. This revisioning table is copy of the original table, with a couple of additional fields.</p>
+<pre>CREATE TABLE `_revision_mytable` LIKE `mytable`;
+
+ALTER TABLE `_revision_mytable`
+  CHANGE `id` `id` int(10) unsigned,
+  DROP PRIMARY KEY,
+  ADD `_revision` bigint unsigned AUTO_INCREMENT,
+  ADD `_revision_previous` bigint unsigned NULL,
+  ADD `_revision_action` enum('INSERT','UPDATE') default NULL,
+  ADD `_revision_user_id` int(10) unsigned NULL,
+  ADD `_revision_timestamp` datetime NULL default NULL,
+  ADD `_revision_comment` text NULL,
+  ADD PRIMARY KEY (`_revision`),
+  ADD INDEX (`_revision_previous`),
+  ADD INDEX `org_primary` (`id`);</pre>
+<p>The most important field is `_revision`. This field contains a unique identifier for a version of a record from the table. Since this is the unique identifier in the revisioning table, the original id field becomes a normal (indexed) field.</p>
+<p>We&#8217;ll also store some additional information in the revisioning table. The `_revision_previous` field hold the revision nr of the version that was updated to create this revision. Field `_revision_action` holds the action that was executed to create this revision. This field has an extra function that will discussed later. The user id and timestamp are useful for blaming changes on someone. We can add some comment per revision.</p>
+<p>The database user is probably always the same. Storing this in the user id field is not useful. Instead, we can set variable @auth_id after logging in and on connecting to the database to the session user.</p>
+<p><strong>Altering the original table</strong><br />
+The original table needs 2 additional fields: `_revision` and `_revision_comment`. The `_revision` field holds the current active version. The field can also be used to revert to a different revision. The value of `_revision_comment` set on an update or insert will end up in the revisioning table. The field in the original table will always be empty.</p>
+<pre>ALTER TABLE `mytable`
+  ADD `_revision` bigint unsigned NULL,
+  ADD `_revision_comment` text NULL,
+  ADD UNIQUE INDEX (`_revision`);</pre>
+<p><strong>The history table</strong><br />
+Saving each version is not enough. Since we can revert back to older revisions and of course delete the record altogether, we want to store which version of the record was enabled at what time. The history table only needs to hold the revision number and a timestamp. We&#8217;ll add the primary key fields, so it&#8217;s easier to query. A user id field is included again to blame.</p>
+<pre>CREATE TABLE `_revhistory_mytable` (
+  `id` int(10) unsigned,
+  `_revision` bigint unsigned NULL,
+  `_revhistory_user_id` int(10) unsigned NULL,
+  `_revhistory_timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP,
+  INDEX (`id`),
+  INDEX (_revision),
+  INDEX (_revhistory_user_id),
+  INDEX (_revhistory_timestamp)
+) ENGINE=InnoDB;</pre>
+<p><strong>How to use</strong><br />
+Inserting, updating and deleting data should work as normal, including the <a href="http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html" target="_blank">INSERT &#8230; ON DUPLICATE KEY UPDATE syntax</a>. When updating the _revision field shouldn&#8217;t be changed.</p>
+<p>To switch to a different version, we would do something like</p>
+<pre>UPDATE mytable SET _revision=$rev WHERE id=$id;</pre>
+<p>However if the record has been deleted, there will be no record in the original table, therefore the update won&#8217;t do anything. Instead we could insert a record, specifying the revision.</p>
+<pre>INSERT INTO mytable SET _revision=$rev;</pre>
+<p>We can combine these two into a statement that works either way.</p>
+<pre>INSERT INTO mytable SET id=$id, _revision=$rev ON DUPLICATE KEY UPDATE _revision=VALUES(_revision);</pre>
+<p>The above query shows that there an additional constraint. The only thing that indicates that different versions is of the same record, is the primary key. Therefore value of the primary key can&#8217;t change on update. This might mean that some tables need to start using surrogate keys if they are not.</p>
+<p><strong>On Insert</strong><br />
+Let&#8217;s dive into the triggers. We&#8217;ll start with before insert. This trigger should get the values of a revision when the _revision field is set, or otherwise add a new row to the revision table.</p>
+<pre>CREATE TRIGGER `mytable-beforeinsert` BEFORE INSERT ON `mytable`
+  FOR EACH ROW BEGIN
+    DECLARE `var-id` int(10) unsigned;
+    DECLARE `var-title` varchar(45);
+    DECLARE `var-body` text;
+    DECLARE `var-_revision` BIGINT UNSIGNED;
+    DECLARE revisionCursor CURSOR FOR SELECT `id`, `title`, `body` FROM `_revision_mytable` WHERE `_revision`=`var-_revision` LIMIT 1;
+  
+    IF NEW.`_revision` IS NULL THEN
+      INSERT INTO `_revision_mytable` (`_revision_comment`, `_revision_user_id`, `_revision_timestamp`) VALUES (NEW.`_revision_comment`, @auth_uid, NOW());
+      SET NEW.`_revision` = LAST_INSERT_ID();
+    ELSE
+      SET `var-_revision`=NEW.`_revision`;
+      OPEN revisionCursor;
+      FETCH revisionCursor INTO `var-id`, `var-title`, `var-body`;
+      CLOSE revisionCursor;
+      
+      SET NEW.`id` = `var-id`, NEW.`title` = `var-title`, NEW.`body` = `var-body`;
+    END IF;
+    
+    SET NEW.`_revision_comment` = NULL;
+  END
+
+CREATE TRIGGER `mytable-afterinsert` AFTER INSERT ON `mytable`
+  FOR EACH ROW BEGIN
+    UPDATE `_revision_mytable` SET `id` = NEW.`id`, `title` = NEW.`title`, `body` = NEW.`body`, `_revision_action`='INSERT' WHERE `_revision`=NEW.`_revision` AND `_revision_action` IS NULL;
+    INSERT INTO `_revhistory_mytable` VALUES (NEW.`id`, NEW.`_revision`, @auth_uid, NOW());
+  END</pre>
+<p>If the `_revision` field is NULL, we insert a new row into the revision table. This action is primarily to get a revision number. We set the comment, user id and timestamp. We won&#8217;t set the values, action and previous id yet. The insert might fail or be converted into an update action by insert on duplicate key update. If the insert action fails, we&#8217;ll have an unused row in the revisioning table. This is a problem, since the primary key has not been set, so it won&#8217;t show up anywhere. We can clean up these phantom records once in a while to keep the table clean.</p>
+<p>When `_revision` is set, we use a cursor to get the values from the revision table. We can&#8217;t fetch to values directly into NEW, therefore we first fetch them into variables and than copy that into NEW.</p>
+<p>After insert, we&#8217;ll update the revision, setting the values and the action. However, the insert might have been an undelete action. In that case `_revision_action` is already set and we don&#8217;t need to update the revision. We also add an entry in the history table.</p>
+<p><strong>On Update</strong><br />
+The before and after update trigger do more or less the same as the before and after insert trigger.</p>
+<pre>CREATE TRIGGER `mytable-beforeupdate` BEFORE UPDATE ON `mytable`
+  FOR EACH ROW BEGIN
+    DECLARE `var-id` int(10) unsigned;
+    DECLARE `var-title` varchar(45);
+    DECLARE `var-body` text;
+    DECLARE `var-_revision` BIGINT UNSIGNED;
+    DECLARE `var-_revision_action` enum('INSERT','UPDATE','DELETE');
+    DECLARE revisionCursor CURSOR FOR SELECT `id`, `title`, `body`, `_revision_action` FROM `_revision_mytable` WHERE `_revision`=`var-_revision` LIMIT 1;
+    
+    IF NEW.`_revision` = OLD.`_revision` THEN
+      SET NEW.`_revision` = NULL;
+      
+    ELSEIF NEW.`_revision` IS NOT NULL THEN 
+      SET `var-_revision` = NEW.`_revision`;
+      
+      OPEN revisionCursor;
+      FETCH revisionCursor INTO `var-id`, `var-title`, `var-body`, `var-_revision_action`;
+      CLOSE revisionCursor;
+      
+      IF `var-_revision_action` IS NOT NULL THEN
+        SET NEW.`id` = `var-id`, NEW.`title` = `var-title`, NEW.`body` = `var-body`;
+      END IF;
+    END IF;
+
+    IF (NEW.`id` != OLD.`id` OR NEW.`id` IS NULL != OLD.`id` IS NULL) THEN
+-- Workaround for missing SIGNAL command
+      DO `Can't change the value of the primary key of table 'mytable' because of revisioning`;
+    END IF;
+
+    IF NEW.`_revision` IS NULL THEN
+      INSERT INTO `_revision_mytable` (`_revision_previous`, `_revision_comment`, `_revision_user_id`, `_revision_timestamp`) VALUES (OLD.`_revision`, NEW.`_revision_comment`, @auth_uid, NOW());
+      SET NEW.`_revision` = LAST_INSERT_ID();
+    END IF;
+    
+    SET NEW.`_revision_comment` = NULL;
+  END
+
+CREATE TRIGGER `mytable-afterupdate` AFTER UPDATE ON `mytable`
+  FOR EACH ROW BEGIN
+    UPDATE `_revision_mytable` SET `id` = NEW.`id`, `title` = NEW.`title`, `body` = NEW.`body`, `_revision_action`='UPDATE' WHERE `_revision`=NEW.`_revision` AND `_revision_action` IS NULL;
+    INSERT INTO `_revhistory_mytable` VALUES (NEW.`id`, NEW.`_revision`, @auth_uid, NOW());
+  END</pre>
+<p>If `_revision` is not set, it has the old value. In that case a new revision should be created. Setting `_revision` to NULL will have the same behaviour of not setting `_revision`. Next to the comment, user id and timestamp, we add also set the previous revision.</p>
+<p>As said before, it&#8217;s very important that the value of primary key doesn&#8217;t change. We need to check this and trigger an error, if it would be changed.</p>
+<p><strong>On Delete</strong><br />
+Deleting won&#8217;t create a new revisiong. However we do want to log that the record has been deleted. Therefore we add an entry to the history table with `_revision` set to NULL.</p>
+<pre>CREATE TRIGGER `mytable-afterdelete` AFTER DELETE ON `mytable`
+  FOR EACH ROW BEGIN
+    INSERT INTO `_revhistory_mytable` VALUES (OLD.`id`, NULL, @auth_uid, NOW());
+  END</pre>
+<p><strong>To conclude</strong><br />
+Using triggers we can implement the basic versioning functionality to MySQL. Since this is completely done the by database, it can be added to an existing application, without having to change to application code (or with very little changes). Using the history table, we can get the data of the database on any moment in time.</p>
+<p>There are some situations where this solution as a bit to basic. A record might span across multiple table, like an invoice with invoice lines. In that case, we don&#8217;t want to revision each individual invoice line, but the invoice as a whole. I&#8217;ll come around in a follow up with a solution for this. I can tell up front that this solution is unfortunately not as clean as these basics.</p>
+<p><strong>Continue reading</strong><br />
+Please continue reading the follow up article &#8216;<a href="http://www.adaniels.nl/articles/versioning-mysql-data-multi-table-records/">Versioning MySQL data: Multi-table records</a>&#8216;. At the bottom of that article you&#8217;ll find <a href="http://www.adaniels.nl/articles/versioning-mysql-data-multi-table-records/#download">a download link</a> for a script that adds revisioning to existing MySQL tables.</p>
+<div class="wp-about-author-containter-top" style="background-color:#fff;"><div class="wp-about-author-pic"><img alt='' src='http://0.gravatar.com/avatar/0bba82e8b2a9d2cf9645cb07ea54766f?s=100&amp;d=http%3A%2F%2F0.gravatar.com%2Favatar%2Fad516503a11cd5ca435acc9bb6523536%3Fs%3D100&amp;r=G' class='avatar avatar-100 photo' height='100' width='100' /></div><div class="wp-about-author-text" style="margin-left:140px"><h3><a href='http://www.jasny.net/articles/author/admin/' title='Arnold Daniels'>Arnold Daniels</a></h3><p>I've spend a big part of my life behind a computer, learning about databases (MySQL), programming (PHP) and system administration (Linux). Currently I playing with HTML5, jquery and node.js.</p><p><a href='http://www.jasny.net/articles/author/admin/' title='More posts by Arnold Daniels'>More Posts</a> </p><p class="wpa-nomargin">Follow Me:<br /><a class='wpa-social-icons' href='http://www.twitter.com/ArnoldDaniels'><img src='http://www.jasny.net/wp-content/plugins/wp-about-author/images/twitter.png' alt='Twitter'/></a><a class='wpa-social-icons' href='http://www.linkedin.com/in/arnolddaniels'><img src='http://www.jasny.net/wp-content/plugins/wp-about-author/images/linkedin.png' alt='LinkedIn'/></a></p></div></div><div class="addtoany_share_save_container addtoany_content_bottom"><div class="a2a_kit a2a_kit_size_32 addtoany_list a2a_target" id="wpa2a_1"><a class="a2a_button_dzone" href="http://www.addtoany.com/add_to/dzone?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data%2F&amp;linkname=Versioning%20MySQL%20data" title="DZone" rel="nofollow" target="_blank"></a><a class="a2a_button_facebook" href="http://www.addtoany.com/add_to/facebook?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data%2F&amp;linkname=Versioning%20MySQL%20data" title="Facebook" rel="nofollow" target="_blank"></a><a class="a2a_button_twitter" href="http://www.addtoany.com/add_to/twitter?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data%2F&amp;linkname=Versioning%20MySQL%20data" title="Twitter" rel="nofollow" target="_blank"></a><a class="a2a_button_google_plus" href="http://www.addtoany.com/add_to/google_plus?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data%2F&amp;linkname=Versioning%20MySQL%20data" title="Google+" rel="nofollow" target="_blank"></a><a class="a2a_button_linkedin" href="http://www.addtoany.com/add_to/linkedin?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data%2F&amp;linkname=Versioning%20MySQL%20data" title="LinkedIn" rel="nofollow" target="_blank"></a><a class="a2a_button_email" href="http://www.addtoany.com/add_to/email?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data%2F&amp;linkname=Versioning%20MySQL%20data" title="Email" rel="nofollow" target="_blank"></a>
+<script type="text/javascript"><!--
+wpa2a.script_load();
+//--></script>
+</div></div>									</div>
+			</div>
+		<!-- You can start editing here. -->
+	<div id="comments">
+		<h3>There are 17 comments in this article:</h3>
+		<ol>
+					<li id="comment-210200"  class="comment ">
+								<cite><span class="date">12 November 2009</span><a href='http://www.antonoff.info/' rel='external nofollow' class='url'>Maxim</a> says:</cite>
+				<blockquote>
+					<p>Hi! nice decision.<br />
+Are know instrument, that can versioning DB struture and creating it automaticly?
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210200", "Maxim")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210202"  class="comment ">
+								<cite><span class="date">12 November 2009</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p><strong><em>Maxim: </em></strong>Did you download the PHP script (available at the bottom of this article)?
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210202", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210210"  class="comment ">
+								<cite><span class="date">12 November 2009</span>Ed says:</cite>
+				<blockquote>
+					<p>The script is empty :(
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210210", "Ed")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210211"  class="comment ">
+								<cite><span class="date">12 November 2009</span><a href='http://www.percona.com/' rel='external nofollow' class='url'>Baron</a> says:</cite>
+				<blockquote>
+					<p>It sounds nice, but in practice, it is hell.  I can&#8217;t tell you how many people&#8217;s data I have fixed after replication and other issues cause problems.  In fact, three of my colleagues are just discussing a mess on a customer&#8217;s systems right now that&#8217;s caused by triggers, stored procedures, and replication.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210211", "Baron")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210213"  class="comment ">
+								<cite><span class="date">12 November 2009</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p><strong><em>Ed: </em></strong>Sorry for that, please try again.</p>
+<p><strong><em>Baron: </em></strong>I agree that you have to be careful with using triggers to alter data. Keep it simple and don&#8217;t try to develop half your application in triggers and stored procedures.</p>
+<p>However, with this method it is very unlikely to mess up your data (in the original table), since:<br />
+1. A trigger on the original table, can&#8217;t update that same table. You can therefore only mess up the data you&#8217;re inserting/updating.<br />
+2. The data in the revisioning table is a copy. If an error would mess up that table, you can remove it and only use the history, not the current data.<br />
+3. You should still run a nightly backup and store that off-disk. The data would still be lost I the disk crash or something else terrible would happen. There are no alternatives to making backups, not this, not replication, not RAID, not anything.<br />
+4. Programming error can happen anywhere, here as well as in the application code.</p>
+<p>If you see something potentially unsafe about the above code, please let me know what that is.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210213", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210215"  class="comment ">
+								<cite><span class="date">12 November 2009</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p>I should also mention, that there trigger will slow down insert and update queries. So I&#8217;ve you&#8217;re doing a lot of writes, don&#8217;t use this. Since the original table still contains the same data, this won&#8217;t affect the speed of read (select) queries.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210215", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210239"  class="comment ">
+								<cite><span class="date">13 November 2009</span><a href='http://artur.ejsmont.org/blog/' rel='external nofollow' class='url'>Artur Ejsmont</a> says:</cite>
+				<blockquote>
+					<p>Hi there,<br />
+Very nice article with a lot of details.</p>
+<p>I used to work with similar solution on Postgres and it was really working well.</p>
+<p>The coolest thing we had in our system was that versioning and history were completly separated from application and kept in db layer. The only thing application could use is to manipulate the CURRENT_VIEW_TIME value. Then views on all the tables would pick rows from real table or from history table so that you were transparently accessing data as it was exactly on CURRENT_VIEW_TIME.</p>
+<p>We had begin and end time in every history row to make this calculation easier.</p>
+<p>Suprisyngly it was working well and not really so slow either. It was the collest thing ever! :- )</p>
+<p>But i agree once you add triggers and lots of them forget about replication &#8230; well maybe row-level-replication would work for you.</p>
+<p>Very nice article! thanks
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210239", "Artur Ejsmont")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210329"  class="comment ">
+								<cite><span class="date">15 November 2009</span><a href='http://blog.schauderhaft.de' rel='external nofollow' class='url'>Jens Schauder</a> says:</cite>
+				<blockquote>
+					<p>When collecting history of data one should carefully think about the expected use cases. For example, the presented approach of a version per table becomes a nightmare when you try to find a consistent set of data spanning multple tables. </p>
+<p>It is also less then optimal when trying to analyze what kind of changes happen on the database.</p>
+<p>Another question often asked is: what happend at a certain time in the system, which probably would be better answered by some kind of audit trail.</p>
+<p>So before you implement an approach like this, I&#8217;d recommend thinking about some different options.</p>
+<p>I wrote a german article about this some time ago: <a href="http://blog.schauderhaft.de/2008/09/14/versionierte-vs-historisierte-objekte/" rel="nofollow">http://blog.schauderhaft.de/2008/09/14/versionierte-vs-historisierte-objekte/</a>
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210329", "Jens Schauder")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210403"  class="comment ">
+								<cite><span class="date">16 November 2009</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p><strong><em>Jens:</em></strong> This article shows the basics of this method. I do have a solution for revisioning data across multiple tables. I&#8217;ll will discuss that in a follow article which I&#8217;ll write this week. That solution also has its limits, so I agree that this solution is not universally applicable. Again, more on that later.</p>
+<p>This method is not mutually exclusive with an audit trail. I don&#8217;t think it is usually worth to save a diff of the change. The alternative is save a copy of each record, which is what this revisioning system does. The audit trail table can than simply look like</p>
+<pre lang="SQL">
+CREATE TABLE `audit_trail` (
+  `table` varchar(255) NOT NULL,
+  `id` int(10) unsigned NOT NULL,
+  `revision` bigint(20) unsigned DEFAULT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY `id` (`table`,`id`,`revision`),
+  KEY `revision` (`table`,`revision`),
+  KEY `user_id` (`user_id`)
+  KEY `timestamp` (`timestamp`),
+)
+</pre>
+<p>This could replace the history tables. Do note that your forced in using surrogate keys for all revisioned tables.</p>
+<p>You should still make a periodic backups, even when using this method. Those backups are basically snapshots.</p>
+<p>As you already state in your article, versioned objects highly complicate the logic of the application layer. I don&#8217;t like that, since that is usually the place that is already complex, shouldn&#8217;t be over abstracted and where most bugs appear.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210403", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210645"  class="comment ">
+								<cite><span class="date">20 November 2009</span><a href='http://www.pythian.com/news/about-log-buffer' rel='external nofollow' class='url'>Log Buffer</a> says:</cite>
+				<blockquote>
+					<p>&#8220;From Arnold Daniels comes a version of versioning MySQL data, which Arnold introduces thus: [...]&#8221;</p>
+<p><a href="http://www.pythian.com/news/5567/log-buffer-170-a-carnival-of-the-vanities-for-dbas" rel="nofollow">Log Buffer #170</a>
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210645", "Log Buffer")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210658"  class="comment ">
+								<cite><span class="date">21 November 2009</span><a href='http://www.percona.com/' rel='external nofollow' class='url'>Baron</a> says:</cite>
+				<blockquote>
+					<p>Arnold, the problem is not conceptual.  The problem is specifically with MySQL&#8217;s triggers and binary logging (replication).  It is not occasionally going to fail, it&#8217;s basically just going to fail and your slave will end up with different data, or duplicate key errors, or you won&#8217;t be able to do point-in-time recovery with binary logs.  See <a href="http://www.mysqlperformanceblog.com/2008/09/29/why-audit-logging-with-triggers-in-mysql-is-bad-for-replication/" rel="nofollow">http://www.mysqlperformanceblog.com/2008/09/29/why-audit-logging-with-triggers-in-mysql-is-bad-for-replication/</a>
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210658", "Baron")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-210900"  class="comment ">
+								<cite><span class="date">26 November 2009</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p>I understand, it&#8217;s a race condition. Also actions in the trigger are not send to the slaves, instead they invoke their own trigger. I&#8217;ll address in my next post.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-210900", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-291077"  class="comment ">
+								<cite><span class="date">9 October 2010</span><a href='http://harikt.com' rel='external nofollow' class='url'>Hari K T</a> says:</cite>
+				<blockquote>
+					<p>Nice . Thanks for sharing . It also helped me to know more about trigger.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-291077", "Hari K T")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-336961"  class="comment ">
+								<cite><span class="date">13 October 2011</span><a href='http://designedtoscale.com' rel='external nofollow' class='url'>Brian</a> says:</cite>
+				<blockquote>
+					<p>Right now its not really possible to version your data in a RDBMS.  You are kind of shoe horning a versioning system on your data model here, because in an RDMS you can only have one version of your data at a time.  The best alternative you can have is an LVM snapshot, or some other mountable copy of your data at some point int time.  the larger issue you have is that you really cannot separate data from how you interpret it.  What every field means and how it used is important as it forms intent and information at that point in time, which is not getting covered in your system. Perhaps if you tied your revision number to the repository tag?
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-336961", "Brian")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-336963"  class="comment ">
+								<cite><span class="date">13 October 2011</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p>Hi Brian,</p>
+<p>Thanks for commenting :)</p>
+<p>MySQL (and other RDBMS) don&#8217;t support versioning natively, which is a pain. This means that you have to do it yourself.</p>
+<p>If we look at the most basic versioning system, it saves a copy of a file (or in this case record) whenever the file is changed. Since there can only be one version of a file on a (standard) file system, a copy needs to be saved elsewhere. We&#8217;re doing the same with MySQL (so no shoe horning here).</p>
+<p>Using LVM is a great way to get a snapshot of the complete database at a certain time. However, this is very much a sysadmin tool. You can&#8217;t (easily) use it to show a user (the manager of a company for instance) the history of a record and allow him to roll back changes.</p>
+<p>I strongly consider reusing a field for a different purpose to be a bad practise. Away from versioning, let&#8217;s say you have an old piece of code that you&#8217;ve forgotten about (or a college has written way back), reverencing this field, than it will reek havoc when updating the data incorrectly.</p>
+<p>Instead you should always create a new column (or rename the old one), when giving it a new purpose.</p>
+<p>The revisioning table should have all columns ever used, even if they no longer exist in the main table. At times that the field did not exists value will simply be NULL.</p>
+<p>Note that this is only a solution for versioning the data and not for versioning the db structure. You should do that separately and treat the revisioning tables like any other table.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-336963", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-387809"  class="comment ">
+								<cite><span class="date">29 August 2014</span><a href='https://cheapstairparts.exposure.co/feed.rss' rel='external nofollow' class='url'>shipstairsparts</a> says:</cite>
+				<blockquote>
+					<p>A bathroom that looks good and functions well is a fantastic place to be in. &#8211; Immediate access to a gorgeous deck or patio outdoors also adds to<br />
+the return. I want you to stop before you do this and first identify important project steps.
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data/comment-page-1/#comment-387809", "shipstairsparts")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-449154"  class="comment ">
+								<cite><span class="date">28 January 2015</span><a href='http://forum.masterdrive.it/visual-basic-net-18/aggiornamento-struttura-db-mysql-87550/#post320102' rel='external nofollow' class='url'>aggiornamento struttura db mysql - Visual Basic .Net</a> says:</cite>
+				<blockquote>
+					<p>[&#8230;]  [&#8230;]</p>
+				</blockquote>
+			</li>
+				</ol>
+	</div><!-- close:comments -->
+ 	<div id="commentform">
+		<h3>Write a comment:</h3>
+			<form action="http://www.jasny.net/wp-comments-post.php" method="post" name="comment-form">
+					<p>
+				<input type="text" name="author" id="author" class="input-text" value="" size="22" />
+				<label for="author">Name (needed)</label>
+			</p>
+			<p>
+				<input type="text" name="email" id="email" class="input-text" value="" size="22" />
+				<label for="email">Email (needed but it will not be published)</label>
+			</p>
+			<p>
+				<input type="text" name="url" id="url" class="input-text" value="" size="22" />
+				<label for="url">Website (if you have one)</label>
+			</p>
+					<p>
+				<textarea name="comment" id="comment" cols="100%" rows="10"></textarea>
+			</p>
+			<p class="input-submit">
+				<input name="submit-comment" type="submit" id="submit-comment" value="comment" />
+				<input type="hidden" name="comment_post_ID" value="291" />
+			</p>
+		<p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="6cb0c9b73f" /></p> 
+<style>
+.yarr { visibility:hidden; position:relative }
+.yarr span { cursor:pointer; position:absolute; bottom:0; right:0 }
+.yarr img { vertical-align:-2px }
+.comment:hover .yarr { visibility:visible }
+</style>
+<script type="text/javascript">
+	//<![CDATA[
+	function yus_replyTo(commentID, author) {
+		var inReplyTo = '@<a href="' + commentID + '">' + author + '<\/a>: ';
+		var myField;
+		if (document.getElementById('comment') && document.getElementById('comment').type == 'textarea') {
+			myField = document.getElementById('comment');
+		} else {
+			return false;
+		}
+		if (document.selection) {
+			myField.focus();
+			sel = document.selection.createRange();
+			sel.text = inReplyTo;
+			myField.focus();
+		}
+		else if (myField.selectionStart || myField.selectionStart == '0') {
+			var startPos = myField.selectionStart;
+			var endPos = myField.selectionEnd;
+			var cursorPos = endPos;
+			myField.value = myField.value.substring(0, startPos) + inReplyTo + myField.value.substring(endPos, myField.value.length);
+			cursorPos += inReplyTo.length;
+			myField.focus();
+			myField.selectionStart = cursorPos;
+			myField.selectionEnd = cursorPos;
+		}
+		else {
+			myField.value += inReplyTo;
+			myField.focus();
+		}
+	}
+	//]]>
+</script>
+                <script type='text/javascript'>
+                    var RecaptchaOptions = { theme : 'blackglass', lang : 'en' , tabindex : 5 };
+                </script><script type="text/javascript" src="http://www.google.com/recaptcha/api/challenge?k=6LcBbPcSAAAAAM2whGdmYf8NN9GmM_u8gKSoLmT2"></script>
+
+	<noscript>
+  		<iframe src="http://www.google.com/recaptcha/api/noscript?k=6LcBbPcSAAAAAM2whGdmYf8NN9GmM_u8gKSoLmT2" height="300" width="500" frameborder="0"></iframe><br/>
+  		<textarea name="recaptcha_challenge_field" rows="3" cols="40"></textarea>
+  		<input type="hidden" name="recaptcha_response_field" value="manual_challenge"/>
+	</noscript>                        <div id="recaptcha-submit-btn-area">&nbsp;</div>
+                        <noscript>
+                         <style type='text/css'>#submit {display:none;}</style>
+                         <input name="submit" type="submit" id="submit-alt" tabindex="6" value="Submit Comment"/> 
+                        </noscript><p style="display: none;"><input type="hidden" id="ak_js" name="ak_js" value="92"/></p>		</form>
+	</div><!-- close:commentform -->
+						</div>
+		<div id="sidebar" class="clearfix">
+	<div id="sb-1">
+					</div><!-- close:sb-1 -->
+	<div id="sb-2">
+					</div>
+</div>	</div>
+	<div id="footer">
+		<a href="#" class="alignright">Back to top &UpArrow;</a>
+		<p><a href="http://www.jasny.net/">Jasny · web development</a> proudly powered by <a href="http://www.wordpress.org" >Wordpress</a> and <a href="http://jarederickson.com/2011/min-a-free-wordpress-minimal-theme/">min Theme</a></p>
+	</div><!-- close:footer -->
+</div><!-- close:wrapper -->
+
+
+
+
+<script type="text/javascript"><!--
+wpa2a.targets=[
+{title:'Versioning MySQL data',url:'http://www.jasny.net/articles/versioning-mysql-data/'}];
+wpa2a.html_done=true;if(wpa2a.script_ready&&!wpa2a.done)wpa2a.init();wpa2a.script_load();
+//--></script>
+                <script type="text/javascript">
+                var sub = document.getElementById('submit');
+                document.getElementById('recaptcha-submit-btn-area').appendChild (sub);
+                document.getElementById('submit').tabIndex = 6;
+                if ( typeof _recaptcha_wordpress_savedcomment != 'undefined') {
+                        document.getElementById('comment').value = _recaptcha_wordpress_savedcomment;
+                }
+                document.getElementById('recaptcha_table').style.direction = 'ltr';
+                </script><script type='text/javascript' src='http://www.jasny.net/wp-content/plugins/akismet/_inc/form.js?ver=3.0.2'></script>
+</body>
+</html>
