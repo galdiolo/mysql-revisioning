@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://gmpg.org/xfn/11">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>  Versioning MySQL data: Multi-table records - Jasny · web development</title>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="description" content="Helping you out with PHP, MySQL &amp; Javascript" />
+	<meta name="generator" content="WordPress 3.9.5" />
+	
+	<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/style.css" type="text/css" media="screen" />
+	<!--[if IE 7]>
+		<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/css/ie7.css" type="text/css" media="screen" />
+	<![endif]-->
+	<!--[if IE 6]>
+		<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/css/ie6.css" type="text/css" media="screen" />
+	<![endif]-->
+	<link rel="stylesheet" href="http://www.jasny.net/wp-content/themes/alliswell-min-theme-c53cba0/css/print.css" type="text/css" media="print" />
+	<link rel="alternate" type="application/rss+xml" href="http://www.jasny.net/feed/" title="Jasny · web development RSS Feed" />
+	<link rel="alternate" type="application/rss+xml" href="http://www.jasny.net/comments/feed/" title="Jasny · web development Comments RSS Feed" />
+	<link rel="pingback" href="http://www.jasny.net/xmlrpc.php" />
+
+<!-- BEGIN Metadata added by Add-Meta-Tags WordPress plugin -->
+<meta name="description" content="In the article Versioning MySQL data , I showed the basics of implementing a revisioning system using trigger. As Jens Schauder already pointed out, often the data of a record is spread across multiple tables, like an invoice with multiple invoice lines. Having each invoice line versioned individually isn t really useful." />
+<meta name="keywords" content="mysql, php" />
+<meta name="wot-verification" content="9bb91ec8a30fda0ac9bd" />
+<link rel="copyright" type="text/html" title="Jasny · web development Copyright Information" href="http://www.jasny.net/copy-freely/" />
+<!-- END Metadata added by Add-Meta-Tags WordPress plugin -->
+
+
+            <script type="text/javascript">//<![CDATA[
+            // Google Analytics for WordPress by Yoast v4.3.5 | http://yoast.com/wordpress/google-analytics/
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-25274509-1']);
+				            _gaq.push(['_trackPageview']);
+            (function () {
+                var ga = document.createElement('script');
+                ga.type = 'text/javascript';
+                ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+
+                var s = document.getElementsByTagName('script')[0];
+                s.parentNode.insertBefore(ga, s);
+            })();
+            //]]></script>
+			<link rel="alternate" type="application/rss+xml" title="Jasny · web development &raquo; Versioning MySQL data: Multi-table records Comments Feed" href="http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/feed/" />
+<link rel='stylesheet' id='bwp-syntax-css'  href='http://www.jasny.net/wp-content/plugins/better-wordpress-syntax-based-on-geshi/css/bwp-syntax.css?ver=3.9.5' type='text/css' media='all' />
+<link rel='stylesheet' id='A2A_SHARE_SAVE-css'  href='http://www.jasny.net/wp-content/plugins/add-to-any/addtoany.min.css?ver=1.7' type='text/css' media='all' />
+<link rel='stylesheet' id='wp-author-bio-css'  href='http://www.jasny.net/wp-content/plugins/wp-about-author/wp-about-author.css?ver=3.9.5' type='text/css' media='all' />
+<script type='text/javascript' src='http://www.jasny.net/wp-includes/js/jquery/jquery.js?ver=1.11.0'></script>
+<script type='text/javascript' src='http://www.jasny.net/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.2.1'></script>
+<script type='text/javascript' src='http://www.jasny.net/wp-content/plugins/better-wordpress-syntax-based-on-geshi/js/bwp-syntax.js?ver=3.9.5'></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://www.jasny.net/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://www.jasny.net/wp-includes/wlwmanifest.xml" /> 
+<link rel='prev' title='Versioning MySQL data' href='http://www.jasny.net/articles/versioning-mysql-data/' />
+<link rel='next' title='A secure backdoor for PHP' href='http://www.jasny.net/articles/a-secure-backdoor-for-php/' />
+<meta name="generator" content="WordPress 3.9.5" />
+<link rel='canonical' href='http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/' />
+<link rel='shortlink' href='http://www.jasny.net/?p=342' />
+
+<script type="text/javascript"><!--
+var a2a_config=a2a_config||{},wpa2a={done:false,html_done:false,script_ready:false,script_load:function(){var a=document.createElement('script'),s=document.getElementsByTagName('script')[0];a.type='text/javascript';a.async=true;a.src='http://static.addtoany.com/menu/page.js';s.parentNode.insertBefore(a,s);wpa2a.script_load=function(){};},script_onready:function(){if(a2a.type=='page'){wpa2a.script_ready=true;if(wpa2a.html_done)wpa2a.init();}},init:function(){for(var i=0,el,target,targets=wpa2a.targets,length=targets.length;i<length;i++){el=document.getElementById('wpa2a_'+(i+1));target=targets[i];a2a_config.linkname=target.title;a2a_config.linkurl=target.url;if(el){a2a.init('page',{target:el});el.id='';}wpa2a.done=true;}wpa2a.targets=[];}};a2a_config.tracking_callback=['ready',wpa2a.script_onready];
+//--></script>
+<link rel="stylesheet" type="text/css" href="http://www.jasny.net/wp-content/plugins/wp-recaptcha/recaptcha.css" /><!-- All in one Favicon 4.3 --><link rel="icon" href="http://www.jasny.net/wp-content/uploads/logo-only-rotated-100x100.png" type="image/png"/>
+</head>
+<body>
+<div id="wrapper">
+	<div class="menu-main-container"><ul id="menu-main" class="menu"><li id="menu-item-794" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-794"><a href="http://www.jasny.net/">Home</a></li>
+<li id="menu-item-795" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-795"><a href="http://www.jasny.net/portfolio/">Portfolio</a></li>
+<li id="menu-item-796" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-796"><a href="http://jasny.github.com">Open source projects</a></li>
+<li id="menu-item-797" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-797"><a href="/articles">Articles</a></li>
+</ul></div>	<div id="header">
+		<h1><a href="http://www.jasny.net/">Jasny <small>· web development</small></a></h1>
+		<p class="description">Helping you out with PHP, MySQL &amp; Javascript</p>
+	</div><!-- close:header -->	<div id="content">
+		<div id="main-content">
+					<div class="post" id="post-342">
+				<h2>Versioning MySQL data: Multi-table records</h2>				<span class="date">by Arnold Daniels on 11/26/2009</span>
+				<div class="entry">
+					<p>In the article &#8216;<a href="http://www.adaniels.nl/articles/versioning-mysql-data/">Versioning MySQL data</a>&#8216;, I showed the basics of implementing a revisioning system using trigger. As Jens Schauder already pointed out, often the data of a record is spread across multiple tables, like an invoice with multiple invoice lines. Having each invoice line versioned individually isn&#8217;t really useful. Instead we want a new revision of the whole invoice on each change.<br />
+<span id="more-342"></span><br />
+<strong>The perfect solution</strong><br />
+Ideally a change of one or more parts of the invoice would be changed, a new revision would be created. There are several issues in actually creating this those. Detecting the change of multiple parts of the invoice at once, generating a single revision, would mean we need to know if the actions are done within the same transaction. Unfortunately there is a connection_id(), but no transaction_id() function in MySQL. Also, the <a href="http://dev.mysql.com/doc/refman/5.1/en/error-messages-server.html#error_er_cant_update_used_table_in_sf_or_trg" target="_blank">query would fail</a> when a query inserts or updates a record in the child table, using the parent table. We need to come up with something else.</p>
+<p>In the implementation we currently have in production, we version the rows in the parent as well in the child tables. For each version of the parent row, we register which versions of the child rows ware set. This however has really complicated the trigger code and tends to need a lot of checking an querying slowing the write process down. Since nobody ever looks at the versions of the child rows, the application forces a new version of the parent row. The benefits of versioning both are therefor minimal.</p>
+<p><strong>Only versioning the parent</strong><br />
+For this new (simplified) implementation, we will only have one revision number across all tables of the record. Changing data from the parent table, will trigger a new version. This will not only copy the parent row to the revisioning table, but also the rows of the children.</p>
+<p>Writing to the child will not trigger a new version, instead it will update the data in the revisioning table. This means that when changing the record, you need to write to the parent table, before writing to the child tables. To force a new version without changing values use</p>
+<pre>UPDATE mytable SET _revision=NULL where id=$id</pre>
+<p>The parent and child tables are defined as</p>
+<pre>CREATE TABLE `mytable` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `description` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB
+
+CREATE TABLE `mychild` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `mytable_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `title` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  KEY `mytable_id` (`mytable_id`),
+  CONSTRAINT `mychild_ibfk_1` FOREIGN KEY (`mytable_id`) REFERENCES `mytable` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB</pre>
+<p>Note that we are using InnoDB tables here. MyISAM doesn&#8217;t have foreign key constraints, therefor it&#8217;s not possible to define a parent-child relationship.</p>
+<p><strong>Insert, update and delete</strong><br />
+In the parent trigger, two different things happen concerning the child rows. When a new version is created, the data of `mychild` is copied to the revisioning table. On a revision switch, data will be copied from the revisioning table into `mychild`. The &#8220;`_revision_action` IS NULL&#8221; condition, means that `_revision_mytable` is only updated when a new revision is created.</p>
+<pre>CREATE TRIGGER `mytable-afterupdate` AFTER update ON `mytable`
+  FOR EACH ROW BEGIN
+    DECLARE `newrev` BOOLEAN;
+    
+    UPDATE `_revision_mytable` SET `id` = NEW.`id`, `name` = NEW.`name`, `description` = NEW.`description`, `_revision_action`='update' WHERE `_revision`=NEW.`_revision` AND `_revision_action` IS NULL;
+    SET newrev = (ROW_COUNT() &gt; 0);
+    INSERT INTO `_revhistory_mytable` VALUES (NEW.`id`, NEW.`_revision`, @auth_uid, NOW());
+    
+    IF newrev THEN
+       INSERT INTO `_revision_mychild` SELECT *, NEW.`_revision` FROM `mychild` WHERE `mytable_id` = NEW.`id`;
+    ELSE
+       DELETE `t`.* FROM `mychild` AS `t` LEFT JOIN `_revision_mychild` AS `r` ON 0=1 WHERE `t`.`mytable_id` = NEW.`id`;
+       INSERT INTO `mychild` SELECT `id`, `mytable_id`, `title` FROM `_revision_mychild` WHERE `_revision` = NEW.`_revision`;
+    END IF;
+  END
+
+CREATE TRIGGER `mychild-afterinsert` AFTER INSERT ON `mychild`
+  FOR EACH ROW BEGIN
+    DECLARE CONTINUE HANDLER FOR 1442 BEGIN END;
+    INSERT IGNORE INTO `_revision_mychild` (`id`, `mytable_id`, `title`, `_revision`) SELECT NEW.`id`, NEW.`mytable_id`, NEW.`title`, `_revision` FROM `mytable` AS `p` WHERE `p`.`id`=NEW.`mytable_id`;
+  END
+
+CREATE TRIGGER `mychild-afterupdate` AFTER UPDATE ON `mychild`
+  FOR EACH ROW BEGIN
+    REPLACE INTO `_revision_mychild` (`id`, `mytable_id`, `title`, `_revision`) SELECT NEW.`id`, NEW.`mytable_id`, NEW.`title`, `_revision` FROM `mytable` AS `p` WHERE `p`.`id`=NEW.`mytable_id`;
+  END
+
+CREATE TRIGGER `mychild-afterdelete` AFTER DELETE ON `mychild`
+  FOR EACH ROW BEGIN
+    DECLARE CONTINUE HANDLER FOR 1442 BEGIN END;
+    DELETE `r`.* FROM `_revision_mychild` AS `r` INNER JOIN `mytable` AS `p` ON `r`.`_revision` = `p`.`_revision` WHERE `r`.`id` = OLD.`id`;
+  END</pre>
+<p>Changing data in table `mychild` simply updates the data in the revisioning table. The revision number is grabbed from the field in the parent table.</p>
+<p>Switching the revision can only be done through the parent table. This will also automatically change the data in the child tables. We simply delete all rows of the record and replace them with data from the revisioning table. This would however trigger the deletion of the data in `_revision_child` on which the insert has nothing to do. To prevent this, we can abuse that fact that a trigger can&#8217;t update data of a table using in the insert/update/delete query. This causes <a href="http://dev.mysql.com/doc/refman/5.1/en/error-messages-server.html#error_er_cant_update_used_table_in_sf_or_trg">error 1442</a>. With a continue handler we can ignore this silently.</p>
+<p>The InnoDB constraints will handle the cascading delete. Deleting child data <a href="http://dev.mysql.com/doc/refman/5.4/en/innodb-foreign-key-constraints.html" target="_blank">won&#8217;t activate the deletion trigger</a>, which is all the better in this case.</p>
+<p><strong>Without a primary key</strong><br />
+A primary key is not required for the child table, since versioning is done purely based on the id of `mytable`.</p>
+<pre>CREATE TABLE `mypart` (
+  `mytable_id` int(10) unsigned NOT NULL,
+  `reference` varchar(255) NOT NULL,
+  KEY `mytable_id` (`mytable_id`),
+  CONSTRAINT `mypart_ibfk_1` FOREIGN KEY (`mytable_id`) REFERENCES `mytable` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB</pre>
+<p>This does cause an issue for the update and delete triggers of the child table. It can&#8217;t use the primary to id to locate the current version of the modified/removed row. This can be solved by a trick I got from PhpMyAdmin. We can simply locate the record by comparing the old values of all fields. There is no constraint for the table enforcing the uniqueness of a row, so we could be targeting multiple identical rows. Since they are identical, it doesn&#8217;t matter which one we target, as long as we limit to 1 row.</p>
+<pre>CREATE TRIGGER `mypart-afterupdate` AFTER UPDATE ON `mypart`
+  FOR EACH ROW BEGIN
+    DELETE FROM `_revision_mypart` WHERE `_revision` IN (SELECT `_revision` FROM `mytable` WHERE `id` = OLD.`mytable_id`) AND `mytable_id` = OLD.`mytable_id` AND `reference` = OLD.`reference` LIMIT 1;
+    INSERT INTO `_revision_mypart` (`mytable_id`, `reference`, `_revision`) SELECT NEW.`mytable_id`, NEW.`reference`, `_revision` FROM `mytable` AS `p` WHERE `p`.`id`=NEW.`mytable_id`;
+  END
+
+CREATE TRIGGER `mypart-afterdelete` AFTER DELETE ON `mypart`
+  FOR EACH ROW BEGIN
+    DECLARE CONTINUE HANDLER FOR 1442 BEGIN END;
+    DELETE FROM `_revision_mypart` WHERE `_revision` IN (SELECT `_revision` FROM `mytable` WHERE `id` = OLD.`mytable_id`) AND `mytable_id` = OLD.`mytable_id` AND `reference` = OLD.`reference` LIMIT 1;
+  END</pre>
+<p><strong>Unique keys</strong><br />
+The revisioning table has multiple versions of a record. Unique indexes from the original table should be converted to non-unique indexes in the revisioning table. This information can be fetched using INFORMATION_SCHEMA.</p>
+<pre>SELECT c.CONSTRAINT_NAME, GROUP_CONCAT(CONCAT('`', k.COLUMN_NAME, '`')) AS cols FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS `c` INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS `k` ON c.TABLE_SCHEMA=k.TABLE_SCHEMA AND c.TABLE_NAME=k.TABLE_NAME AND c.CONSTRAINT_NAME=k.CONSTRAINT_NAME WHERE c.TABLE_SCHEMA=DATABASE() AND c.TABLE_NAME='mytable' AND c.CONSTRAINT_TYPE='UNIQUE' AND c.CONSTRAINT_NAME != '_revision' GROUP BY c.CONSTRAINT_NAME</pre>
+<p><strong>Revisioning and replication</strong><br />
+Baron Schwartz pointed out a <a href="http://www.mysqlperformanceblog.com/2008/09/29/why-audit-logging-with-triggers-in-mysql-is-bad-for-replication/" target="_blank">race condition</a> when relying on auto-increment keys in triggers with replication. Actions carried out through triggers on a master are <a href="http://dev.mysql.com/doc/refman/5.0/en/faqs-triggers.html#qandaitem-22-5-1-12" target="_blank">not replicated to a slave server</a>. Instead, <a href="http://dev.mysql.com/doc/refman/5.0/en/faqs-triggers.html#qandaitem-22-5-1-10" target="_blank">triggers on the slave will be invoked</a>, which should do the same action as on the master.</p>
+<p>It probably isn&#8217;t needed to have a copy of the revisioning tables on the slave. This would mean that we could simply omit the triggers. Unfortunately this causes problems when changing the revision. In that case we are forced to move switching of a revision out of the database. Instead the application needs to select the data from all revisioning tables and write that to the original tables. Any other thoughts on solving this issue are welcome.</p>
+<p><strong id="download">Download</strong><br />
+<a href='http://github.com/jasny/mysql-revisioning/archives/master'>&#8211;> Download mysql-revisioning script @github <--</a></p>
+<div class="wp-about-author-containter-top" style="background-color:#fff;"><div class="wp-about-author-pic"><img alt='' src='http://0.gravatar.com/avatar/0bba82e8b2a9d2cf9645cb07ea54766f?s=100&amp;d=http%3A%2F%2F0.gravatar.com%2Favatar%2Fad516503a11cd5ca435acc9bb6523536%3Fs%3D100&amp;r=G' class='avatar avatar-100 photo' height='100' width='100' /></div><div class="wp-about-author-text" style="margin-left:140px"><h3><a href='http://www.jasny.net/articles/author/admin/' title='Arnold Daniels'>Arnold Daniels</a></h3><p>I've spend a big part of my life behind a computer, learning about databases (MySQL), programming (PHP) and system administration (Linux). Currently I playing with HTML5, jquery and node.js.</p><p><a href='http://www.jasny.net/articles/author/admin/' title='More posts by Arnold Daniels'>More Posts</a> </p><p class="wpa-nomargin">Follow Me:<br /><a class='wpa-social-icons' href='http://www.twitter.com/ArnoldDaniels'><img src='http://www.jasny.net/wp-content/plugins/wp-about-author/images/twitter.png' alt='Twitter'/></a><a class='wpa-social-icons' href='http://www.linkedin.com/in/arnolddaniels'><img src='http://www.jasny.net/wp-content/plugins/wp-about-author/images/linkedin.png' alt='LinkedIn'/></a></p></div></div><div class="addtoany_share_save_container addtoany_content_bottom"><div class="a2a_kit a2a_kit_size_32 addtoany_list a2a_target" id="wpa2a_1"><a class="a2a_button_dzone" href="http://www.addtoany.com/add_to/dzone?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data-multi-table-records%2F&amp;linkname=Versioning%20MySQL%20data%3A%20Multi-table%20records" title="DZone" rel="nofollow" target="_blank"></a><a class="a2a_button_facebook" href="http://www.addtoany.com/add_to/facebook?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data-multi-table-records%2F&amp;linkname=Versioning%20MySQL%20data%3A%20Multi-table%20records" title="Facebook" rel="nofollow" target="_blank"></a><a class="a2a_button_twitter" href="http://www.addtoany.com/add_to/twitter?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data-multi-table-records%2F&amp;linkname=Versioning%20MySQL%20data%3A%20Multi-table%20records" title="Twitter" rel="nofollow" target="_blank"></a><a class="a2a_button_google_plus" href="http://www.addtoany.com/add_to/google_plus?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data-multi-table-records%2F&amp;linkname=Versioning%20MySQL%20data%3A%20Multi-table%20records" title="Google+" rel="nofollow" target="_blank"></a><a class="a2a_button_linkedin" href="http://www.addtoany.com/add_to/linkedin?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data-multi-table-records%2F&amp;linkname=Versioning%20MySQL%20data%3A%20Multi-table%20records" title="LinkedIn" rel="nofollow" target="_blank"></a><a class="a2a_button_email" href="http://www.addtoany.com/add_to/email?linkurl=http%3A%2F%2Fwww.jasny.net%2Farticles%2Fversioning-mysql-data-multi-table-records%2F&amp;linkname=Versioning%20MySQL%20data%3A%20Multi-table%20records" title="Email" rel="nofollow" target="_blank"></a>
+<script type="text/javascript"><!--
+wpa2a.script_load();
+//--></script>
+</div></div>									</div>
+			</div>
+		<!-- You can start editing here. -->
+	<div id="comments">
+		<h3>There are 9 comments in this article:</h3>
+		<ol>
+					<li id="comment-211340"  class="comment ">
+								<cite><span class="date">4 December 2009</span><a href='http://www.pythian.com/news/about-log-buffer' rel='external nofollow' class='url'>Log Buffer</a> says:</cite>
+				<blockquote>
+					<p>&#8220;[...]Arnold Daniels delves into versioning MySQL data across multi-table records.[...]&#8221;</p>
+<p><a href="http://www.pythian.com/news/6165/log-buffer-171-a-carnival-of-the-vanities-for-dbas/" rel="nofollow">Log Buffer #171</a>
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-211340", "Log Buffer")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-212099"  class="comment ">
+								<cite><span class="date">20 December 2009</span>Edmund says:</cite>
+				<blockquote>
+					<p>Could you upload the php script to generating triggers for Multi-table records versioning? I found the link posted is for single table only</p>
+<p>Thanks
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-212099", "Edmund")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-212100"  class="comment ">
+								<cite><span class="date">20 December 2009</span>Peter says:</cite>
+				<blockquote>
+					<p>The generated trigger with no different from the previous one? </p>
+<p>How the script know the relationship between parent and child table?
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-212100", "Peter")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-212159"  class="comment ">
+								<cite><span class="date">21 December 2009</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p><strong><em>Edmund, Peter: </em></strong>The downloadable script, does multi-table revisioning.  (Only single table isn&#8217;t available)</p>
+<p>The parent-child relationship is based on a <a href="http://dev.mysql.com/doc/refman/5.1/en/innodb-foreign-key-constraints.html" rel="nofollow">foreign key constraint</a>. MyISAM doesn&#8217;t support foreign keys, so you can&#8217;t do parent-child relationships with MyISAM tables.</p>
+<p>To create parent/child revisioning do</p>
+<pre>
+php mysql-revisioning.php 'parent(child1,child2)' another_table ...
+</pre>
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-212159", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-228401"  class="comment ">
+								<cite><span class="date">6 May 2010</span>May says:</cite>
+				<blockquote>
+					<p>Hi,<br />
+How do I create parent/child revisioning in case that child has another child table? Let&#8217;s say I have tables like this</p>
+<p>Parent (id, column&#8230;)<br />
+   Child (id, parent_id)<br />
+      SubChild (id, child_id)</p>
+<p>I want to do versioning only for parent table, but if I switch revision I want also child table as well as sub-child table to be switched. Is it possible to do using your script?</p>
+<p>Thanks
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-228401", "May")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-229865"  class="comment ">
+								<cite><span class="date">10 May 2010</span><a href='http://www.adaniels.nl' rel='external nofollow' class='url'>Arnold Daniels</a> says:</cite>
+				<blockquote>
+					<p><b><em>May: </em></b> The script currently doesn&#8217;t do this. You can add this though.</p>
+<p>The mytable-afterupdate trigger needs to insert a revision record for all descendants (not only direct children).</p>
+<pre lang="SQL">
+INSERT INTO `_revision_mysubchild` SELECT `s`.*, NEW.`_revision` FROM `mysubchild` AS `t` INNER JOIN `mychild` AS `c` ON `t`.`mychild_id` = `c`.`id` WHERE `c`.`mytable_id` = NEW.`id`;
+</pre>
+<p>For changing the revision the SQL would look like</p>
+<pre lang="SQL">
+DELETE `t`.* FROM `mysubchild` AS `t` INNER JOIN `mychild` AS `c` ON `t`.`mychild_id` = `c`.`id` LEFT JOIN `_revision_mysubchild` AS `r` ON 0=1 WHERE `c`.`mytable_id` = NEW.`id`;
+INSERT INTO `mysubchild` SELECT `id`, `mychild_id`, `somefield` FROM `_revision_mysubchild` WHERE `_revision` = NEW.`_revision`;
+</pre>
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-229865", "Arnold Daniels")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-338158"  class="comment ">
+								<cite><span class="date">15 February 2012</span>satheesh s says:</cite>
+				<blockquote>
+					<p>pls any one know tell me&#8230;.how to delete one row from multiple table? in trigger pgm..
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-338158", "satheesh s")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+					<li id="comment-353574"  class="comment ">
+								<cite><span class="date">23 October 2012</span><a href='http://.' rel='external nofollow' class='url'>ilko</a> says:</cite>
+				<blockquote>
+					<p>Take a look at these methods for mysql data revisioning/versioning on wiki: <a href="http://en.wikipedia.org/wiki/Slowly_changing_dimension" title="http://en.wikipedia.org/wiki/Slowly_changing_dimension" rel="nofollow">
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-353574", "ilko")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+<p></a></p>
+				</blockquote>
+			</li>
+					<li id="comment-353575"  class="comment ">
+								<cite><span class="date">23 October 2012</span><a href='http://.' rel='external nofollow' class='url'>ilko</a> says:</cite>
+				<blockquote>
+					<p><a href="http://en.wikipedia.org/wiki/Slowly_changing_dimension" title="http://en.wikipedia.org/wiki/Slowly_changing_dimension" rel="nofollow">http://en.wikipedia.org/wiki/Slowly_changing_dimension</a>
+<div class="yarr"><span onclick='yus_replyTo("http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/comment-page-1/#comment-353575", "ilko")' title="Reply to this comment"><img alt="Reply" src="http://www.jasny.net/wp-content/plugins/reply-to/reply.png" />Reply</span></div>
+				</blockquote>
+			</li>
+				</ol>
+	</div><!-- close:comments -->
+ 	<div id="commentform">
+		<h3>Write a comment:</h3>
+			<form action="http://www.jasny.net/wp-comments-post.php" method="post" name="comment-form">
+					<p>
+				<input type="text" name="author" id="author" class="input-text" value="" size="22" />
+				<label for="author">Name (needed)</label>
+			</p>
+			<p>
+				<input type="text" name="email" id="email" class="input-text" value="" size="22" />
+				<label for="email">Email (needed but it will not be published)</label>
+			</p>
+			<p>
+				<input type="text" name="url" id="url" class="input-text" value="" size="22" />
+				<label for="url">Website (if you have one)</label>
+			</p>
+					<p>
+				<textarea name="comment" id="comment" cols="100%" rows="10"></textarea>
+			</p>
+			<p class="input-submit">
+				<input name="submit-comment" type="submit" id="submit-comment" value="comment" />
+				<input type="hidden" name="comment_post_ID" value="342" />
+			</p>
+		<p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="9a87a1a899" /></p> 
+<style>
+.yarr { visibility:hidden; position:relative }
+.yarr span { cursor:pointer; position:absolute; bottom:0; right:0 }
+.yarr img { vertical-align:-2px }
+.comment:hover .yarr { visibility:visible }
+</style>
+<script type="text/javascript">
+	//<![CDATA[
+	function yus_replyTo(commentID, author) {
+		var inReplyTo = '@<a href="' + commentID + '">' + author + '<\/a>: ';
+		var myField;
+		if (document.getElementById('comment') && document.getElementById('comment').type == 'textarea') {
+			myField = document.getElementById('comment');
+		} else {
+			return false;
+		}
+		if (document.selection) {
+			myField.focus();
+			sel = document.selection.createRange();
+			sel.text = inReplyTo;
+			myField.focus();
+		}
+		else if (myField.selectionStart || myField.selectionStart == '0') {
+			var startPos = myField.selectionStart;
+			var endPos = myField.selectionEnd;
+			var cursorPos = endPos;
+			myField.value = myField.value.substring(0, startPos) + inReplyTo + myField.value.substring(endPos, myField.value.length);
+			cursorPos += inReplyTo.length;
+			myField.focus();
+			myField.selectionStart = cursorPos;
+			myField.selectionEnd = cursorPos;
+		}
+		else {
+			myField.value += inReplyTo;
+			myField.focus();
+		}
+	}
+	//]]>
+</script>
+                <script type='text/javascript'>
+                    var RecaptchaOptions = { theme : 'blackglass', lang : 'en' , tabindex : 5 };
+                </script><script type="text/javascript" src="http://www.google.com/recaptcha/api/challenge?k=6LcBbPcSAAAAAM2whGdmYf8NN9GmM_u8gKSoLmT2"></script>
+
+	<noscript>
+  		<iframe src="http://www.google.com/recaptcha/api/noscript?k=6LcBbPcSAAAAAM2whGdmYf8NN9GmM_u8gKSoLmT2" height="300" width="500" frameborder="0"></iframe><br/>
+  		<textarea name="recaptcha_challenge_field" rows="3" cols="40"></textarea>
+  		<input type="hidden" name="recaptcha_response_field" value="manual_challenge"/>
+	</noscript>                        <div id="recaptcha-submit-btn-area">&nbsp;</div>
+                        <noscript>
+                         <style type='text/css'>#submit {display:none;}</style>
+                         <input name="submit" type="submit" id="submit-alt" tabindex="6" value="Submit Comment"/> 
+                        </noscript><p style="display: none;"><input type="hidden" id="ak_js" name="ak_js" value="107"/></p>		</form>
+	</div><!-- close:commentform -->
+						</div>
+		<div id="sidebar" class="clearfix">
+	<div id="sb-1">
+					</div><!-- close:sb-1 -->
+	<div id="sb-2">
+					</div>
+</div>	</div>
+	<div id="footer">
+		<a href="#" class="alignright">Back to top &UpArrow;</a>
+		<p><a href="http://www.jasny.net/">Jasny · web development</a> proudly powered by <a href="http://www.wordpress.org" >Wordpress</a> and <a href="http://jarederickson.com/2011/min-a-free-wordpress-minimal-theme/">min Theme</a></p>
+	</div><!-- close:footer -->
+</div><!-- close:wrapper -->
+
+
+
+
+<script type="text/javascript"><!--
+wpa2a.targets=[
+{title:'Versioning MySQL data: Multi-table records',url:'http://www.jasny.net/articles/versioning-mysql-data-multi-table-records/'}];
+wpa2a.html_done=true;if(wpa2a.script_ready&&!wpa2a.done)wpa2a.init();wpa2a.script_load();
+//--></script>
+                <script type="text/javascript">
+                var sub = document.getElementById('submit');
+                document.getElementById('recaptcha-submit-btn-area').appendChild (sub);
+                document.getElementById('submit').tabIndex = 6;
+                if ( typeof _recaptcha_wordpress_savedcomment != 'undefined') {
+                        document.getElementById('comment').value = _recaptcha_wordpress_savedcomment;
+                }
+                document.getElementById('recaptcha_table').style.direction = 'ltr';
+                </script><script type='text/javascript' src='http://www.jasny.net/wp-content/plugins/akismet/_inc/form.js?ver=3.0.2'></script>
+</body>
+</html>
